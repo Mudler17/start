@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-Kernel | Experimental Hub</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent-cyan: #00f2fe;
+            --accent-purple: #4facfe;
+            --accent-warning: #fbbf24; /* Warnfarbe für "Im Aufbau" */
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; /* Wechsel zu Monospace für den Tech-Vibe */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Dynamischer Hintergrund-Effekt */
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* Experimentell-Banner */
+        .construction-banner {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(251, 191, 36, 0.1),
+                rgba(251, 191, 36, 0.1) 10px,
+                rgba(0, 0, 0, 0.2) 10px,
+                rgba(0, 0, 0, 0.2) 20px
+            );
+            border-bottom: 1px solid var(--accent-warning);
+            color: var(--accent-warning);
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .blink-warning {
+            animation: pulse-warning 2s infinite;
+        }
+
+        @keyframes pulse-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        header {
+            text-align: center;
+            padding: 4rem 2rem 2rem;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(to right, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Blinkender Terminal Cursor */
+        .cursor {
+            display: inline-block;
+            width: 20px;
+            height: 40px;
+            background-color: var(--accent-cyan);
+            margin-left: 8px;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .lab-notice {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(251, 191, 36, 0.05);
+            border: 1px dashed var(--accent-warning);
+            border-radius: 8px;
+            display: inline-block;
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            margin: 3rem 0 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Scanline Effekt für Karten */
+        .card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .card.public:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 10px 30px rgba(0, 242, 254, 0.1);
+        }
+
+        .card.private {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-public {
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+        }
+
+        .status-private {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .status-wip {
+            background: rgba(251, 191, 36, 0.1);
+            color: var(--accent-warning);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            margin-right: 0.5rem;
+        }
+
+        .badges {
+            display: flex;
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .subdomain-link {
+            color: var(--accent-purple);
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.4);
+            padding: 0.6rem;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid rgba(79, 172, 254, 0.2);
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--card-border);
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.2rem; }
+            .grid { grid-template-columns: 1fr; }
+            .cursor { height: 25px; width: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamischer Hintergrund -->
+    <canvas id="canvas-bg"></canvas>
+
+    <!-- Warn-Banner für "Im Aufbau" -->
+    <div class="construction-banner">
+        <span class="blink-warning">⚠️</span>
+        System im Aufbau // Experimentelles Labor // Instabilitäten möglich
+        <span class="blink-warning">⚠️</span>
+    </div>
+
+    <header>
+        <h1>ki-kernel.de<span class="cursor"></span></h1>
+        <p class="subtitle">Das zentrale Verzeichnis für experimentelle KI-Anwendungen, Automatisierungs-Tools und Machine-Learning-Demos.</p>
+        
+        <div class="lab-notice">
+            <strong><span style="color: var(--accent-warning);">[STATUS: INITIALISIERUNG]</span></strong><br>
+            Diese Seite und die angebundenen Subdomains befinden sich in der aktiven Entwicklung. Module können ausfallen, sich verändern oder neu hinzukommen. Betreten auf eigene Gefahr.
+        </div>
+    </header>
+
+    <main>
+        <h2 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+            Öffentliche Module
+        </h2>
+        
+        <div class="grid">
+            <!-- App Card 1 -->
+            <a href="https://vision.ki-kernel.de" class="card public">
+                <div class="card-header">
+                    <span class="card-title">Vision Analyzer</span>
+                    <div class="badges">
+                        <span class="status-badge status-wip">Alpha</span>
+                        <span class="status-badge status-public">Public</span>
+                    </div>
+                </div>
+                <p class="card-desc">Lade Bilder hoch und lass sie von modernsten Computer-Vision-Modellen beschreiben und analysieren. (Aktuell Training neuer Modelle).</p>
+                <div class="subdomain-link">> connect vision.ki-kernel.de</div>
+            </a>
+
+            <!-- App Card 2 -->
+            <a href="https://chat.ki-kernel.de" class="card public">
+                <div class="card-header">
+                    <span class="card-title">Custom LLM Chat</span>
+                    <div class="badges">
+                        <span class="status-badge status-wip">Beta</span>
+                        <span class="status-badge status-public">Public</span>
+                    </div>
+                </div>
+                <p class="card-desc">Eine angepasste Chat-Oberfläche, um verschiedene Text-Generierungs-Modelle mit speziellen System-Prompts zu testen.</p>
+                <div class="subdomain-link">> connect chat.ki-kernel.de</div>
+            </a>
+        </div>
+
+        <h2 class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Kernel Core (Gesperrt / Privat)
+        </h2>
+
+        <div class="grid">
+            <!-- Private App Card 1 -->
+            <div class="card private">
+                <div class="card-header">
+                    <span class="card-title">Agent Orchestrator</span>
+                    <span class="status-badge status-private">Locked</span>
+                </div>
+                <p class="card-desc">Interne Entwicklungsumgebung zur Verkettung von autonomen KI-Agenten. Derzeit offline für Umbauarbeiten an der Datenbank.</p>
+                <div class="subdomain-link">> offline</div>
+            </div>
+
+            <!-- Private App Card 2 -->
+            <div class="card private">
+                <div class="card-header">
+                    <span class="card-title">API Token Manager</span>
+                    <span class="status-badge status-private">Locked</span>
+                </div>
+                <p class="card-desc">Zentrale Verwaltung für API-Schlüssel, Quotas und Kostenkontrolle.</p>
+                <div class="subdomain-link">> restricted access</div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 ki-kernel.de | Kernel Version 0.1a (Pre-Release)</p>
+    </footer>
+
+    <script>
+        // Simpler Partikel-Effekt für den "Tech/AI" Look im Hintergrund
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        let width, height, particles;
+
+        function init() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < 40; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 2 + 1,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4
+                });
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = 'rgba(0, 242, 254, 0.2)';
+            
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Linien zwischen nahen Partikeln zeichnen
+            ctx.strokeStyle = 'rgba(79, 172, 254, 0.08)';
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(draw);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        draw();
+    </script>
+</body>
+</html>
