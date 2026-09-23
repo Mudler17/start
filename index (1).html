@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="KI-Kernel – Hub für kleine KI-Anwendungen. Ein privates, nicht-kommerzielles Hobbyprojekt ohne Tracking.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0b0f1a">
+<title>KI-Kernel · Hub</title>
+<style>
+  /* ===================== Design-Tokens ===================== */
+  :root{
+    /* Farben – Dunkelmodus (Standard) */
+    --bg:            #0b0f1a;
+    --bg-soft:       #10162a;
+    --surface:       rgba(255,255,255,.04);
+    --surface-2:     rgba(255,255,255,.06);
+    --border:        rgba(255,255,255,.10);
+    --border-strong: rgba(255,255,255,.18);
+    --text:          #eef2ff;
+    --text-muted:    #a5b0c9;
+    --text-faint:    #6b7691;
+    --accent:        #7c86ff;   /* Indigo   */
+    --accent-2:      #33d6c8;   /* Cyan     */
+    --accent-soft:   rgba(124,134,255,.14);
+    --glow:          rgba(124,134,255,.35);
+    --particle:      rgba(150,165,255,.55);
+    --link-line:     rgba(120,135,220,.16);
+    --shadow:        0 18px 40px -18px rgba(0,0,0,.75);
+    --radius:        18px;
+    --maxw:          1120px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", sans-serif;
+  }
+  :root[data-theme="light"]{
+    --bg:            #f6f7fb;
+    --bg-soft:       #eef1f8;
+    --surface:       rgba(20,28,54,.03);
+    --surface-2:     rgba(20,28,54,.05);
+    --border:        rgba(20,28,54,.10);
+    --border-strong: rgba(20,28,54,.16);
+    --text:          #131a2e;
+    --text-muted:    #4a566f;
+    --text-faint:    #7a8499;
+    --accent:        #4f57e6;
+    --accent-2:      #0fae9e;
+    --accent-soft:   rgba(79,87,230,.10);
+    --glow:          rgba(79,87,230,.22);
+    --particle:      rgba(70,86,180,.45);
+    --link-line:     rgba(70,86,180,.14);
+    --shadow:        0 16px 34px -20px rgba(30,40,80,.35);
+  }
+
+  /* ===================== Grundlayout ===================== */
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:var(--font);
+    color:var(--text);
+    background:var(--bg);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    transition:background .4s ease, color .4s ease;
+  }
+  /* Farbverlauf-Hintergrund über dem Basis-BG */
+  body::before{
+    content:"";
+    position:fixed; inset:0; z-index:-2;
+    background:
+      radial-gradient(1100px 620px at 15% -8%, var(--accent-soft), transparent 60%),
+      radial-gradient(900px 560px at 108% 6%, rgba(51,214,200,.10), transparent 55%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+    transition:background .4s ease;
+  }
+  #particles{position:fixed; inset:0; z-index:-1; display:block; width:100%; height:100%}
+
+  a{color:inherit}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 22px}
+
+  /* ===================== Kopfzeile ===================== */
+  header.site{
+    padding:30px 0 8px;
+  }
+  .topbar{display:flex; align-items:center; justify-content:space-between; gap:16px}
+  .brand{display:flex; align-items:center; gap:14px; text-decoration:none}
+  .mark{
+    width:44px; height:44px; flex:0 0 auto;
+    border-radius:13px;
+    display:grid; place-items:center;
+    background:linear-gradient(140deg, var(--accent), var(--accent-2));
+    box-shadow:0 8px 22px -8px var(--glow);
+  }
+  .mark svg{width:26px; height:26px; display:block}
+  .brand-name{font-size:1.45rem; font-weight:800; letter-spacing:-.02em; margin:0}
+  .brand-name span{color:var(--accent)}
+
+  .toggle{
+    display:inline-flex; align-items:center; gap:8px;
+    border:1px solid var(--border); background:var(--surface);
+    color:var(--text-muted);
+    border-radius:999px; padding:9px 14px;
+    font-size:.86rem; font-weight:600; cursor:pointer;
+    transition:border-color .2s, color .2s, background .2s, transform .1s;
+  }
+  .toggle:hover{border-color:var(--border-strong); color:var(--text)}
+  .toggle:active{transform:scale(.97)}
+  .toggle svg{width:17px; height:17px}
+  .toggle .ic-sun{display:none}
+  :root[data-theme="light"] .toggle .ic-sun{display:block}
+  :root[data-theme="light"] .toggle .ic-moon{display:none}
+
+  /* ===================== Hero ===================== */
+  .hero{padding:26px 0 30px; max-width:640px}
+  .eyebrow{
+    display:inline-block; font-size:.74rem; font-weight:700; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--accent);
+    padding:5px 11px; border-radius:999px; background:var(--accent-soft);
+    border:1px solid var(--border); margin-bottom:16px;
+  }
+  .hero h1{
+    font-size:clamp(1.9rem, 5.4vw, 2.9rem); line-height:1.1; letter-spacing:-.03em;
+    margin:0 0 12px; font-weight:800;
+  }
+  .hero p{font-size:1.06rem; color:var(--text-muted); margin:0}
+
+  /* ===================== Karten-Raster ===================== */
+  main{padding-bottom:12px}
+  .grid{
+    display:grid; gap:20px;
+    grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+    margin-top:6px;
+  }
+  .card{
+    position:relative; display:flex; flex-direction:column;
+    padding:24px 22px 20px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    text-decoration:none; color:inherit;
+    overflow:hidden;
+    transition:transform .22s cubic-bezier(.2,.7,.3,1), border-color .22s, background .22s, box-shadow .22s;
+  }
+  .card::after{ /* Akzent-Leuchten oben */
+    content:""; position:absolute; inset:0 0 auto 0; height:3px;
+    background:linear-gradient(90deg, var(--accent), var(--accent-2));
+    opacity:0; transition:opacity .22s;
+  }
+  .card:hover, .card:focus-visible{
+    transform:translateY(-4px);
+    border-color:var(--border-strong);
+    background:var(--surface-2);
+    box-shadow:var(--shadow);
+    outline:none;
+  }
+  .card:hover::after, .card:focus-visible::after{opacity:1}
+  .card:focus-visible{box-shadow:0 0 0 3px var(--glow), var(--shadow)}
+
+  .card-icon{
+    width:48px; height:48px; border-radius:13px; margin-bottom:16px;
+    display:grid; place-items:center; flex:0 0 auto;
+    background:var(--accent-soft); color:var(--accent);
+    border:1px solid var(--border);
+    transition:color .22s, background .22s;
+  }
+  .card:hover .card-icon{color:var(--accent-2)}
+  .card-icon svg{width:26px; height:26px; display:block}
+
+  .card h2{font-size:1.15rem; font-weight:700; letter-spacing:-.01em; margin:0 0 8px; display:flex; align-items:center; gap:9px}
+  .card p{font-size:.94rem; color:var(--text-muted); margin:0 0 18px; flex:1 1 auto}
+
+  .badge-new{
+    font-size:.62rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    color:#052a26; background:var(--accent-2);
+    padding:3px 7px; border-radius:6px; line-height:1;
+  }
+  .card-cta{
+    display:inline-flex; align-items:center; gap:7px;
+    font-size:.85rem; font-weight:600; color:var(--accent);
+  }
+  .card-cta svg{width:15px; height:15px; transition:transform .22s}
+  .card:hover .card-cta svg{transform:translateX(4px)}
+  .card-host{font-size:.76rem; color:var(--text-faint); margin-top:2px}
+
+  /* ===================== Footer ===================== */
+  footer.site{
+    margin-top:52px; padding:30px 0 44px;
+    border-top:1px solid var(--border);
+  }
+  .foot-grid{display:flex; flex-wrap:wrap; gap:24px 44px; justify-content:space-between}
+  .foot-block{max-width:520px}
+  .foot-block h3{font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; color:var(--text-faint); margin:0 0 8px; font-weight:700}
+  .foot-block p{font-size:.9rem; color:var(--text-muted); margin:0 0 6px}
+  .foot-block a{color:var(--accent); text-decoration:none}
+  .foot-block a:hover{text-decoration:underline}
+  .copyright{margin-top:24px; font-size:.82rem; color:var(--text-faint)}
+
+  /* ===================== Feinschliff / A11y ===================== */
+  @media (max-width:560px){
+    .hero{padding-top:18px}
+    .grid{gap:16px}
+    .card{padding:20px 18px 18px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important}
+    #particles{display:none}
+  }
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+</style>
+</head>
+<body>
+<canvas id="particles" aria-hidden="true"></canvas>
+
+<header class="site">
+  <div class="wrap topbar">
+    <a class="brand" href="/" aria-label="KI-Kernel Startseite">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3.2"/>
+          <circle cx="12" cy="12" r="8.4" opacity=".6"/>
+          <path d="M12 3.6v2M12 18.4v2M3.6 12h2M18.4 12h2" opacity=".9"/>
+        </svg>
+      </span>
+      <h1 class="brand-name">KI-<span>Kernel</span></h1>
+    </a>
+    <button class="toggle" id="themeToggle" type="button" aria-label="Farbschema wechseln">
+      <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M19.4 4.6l-1.7 1.7M6.3 17.7l-1.7 1.7"/></svg>
+      <span id="themeLabel">Hell</span>
+    </button>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <span class="eyebrow">App-Hub</span>
+    <h1>Willkommen im Hub.</h1>
+    <p>Wähle eine Anwendung, um zu starten – kleine, eigenständige KI-Werkzeuge, direkt im Browser.</p>
+  </section>
+
+  <main>
+    <div class="grid">
+
+      <!-- ============ NEU: Szenario-Lab-Pilot ============ -->
+      <a class="card" href="https://szenario-lab-pilot.ki-kernel.de">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 3h6M10 3v5.2L5.4 17.4A2 2 0 0 0 7.2 20.4h9.6a2 2 0 0 0 1.8-3L14 8.2V3"/>
+            <path d="M8 14h8"/>
+          </svg>
+        </span>
+        <h2>Szenario-Lab-Pilot <span class="badge-new">Neu</span></h2>
+        <p>Interaktive Szenario-Simulationen mit KI-Personas für Workshops und Organisationsentwicklung – als Pilotfassung.</p>
+        <span class="card-cta">Öffnen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+        <span class="card-host">szenario-lab-pilot.ki-kernel.de</span>
+      </a>
+
+      <!-- ============ NEU: Bild-KI ============ -->
+      <a class="card" href="https://bild-ki.ki-kernel.de">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4.5" width="18" height="15" rx="2.4"/>
+            <circle cx="8.5" cy="10" r="1.6"/>
+            <path d="M3.5 17l4.8-4.4a2 2 0 0 1 2.7 0L16 17.5"/>
+            <path d="M17.5 4.2l.5 1.6 1.6.5-1.6.5-.5 1.6-.5-1.6-1.6-.5 1.6-.5z"/>
+          </svg>
+        </span>
+        <h2>Bild-KI <span class="badge-new">Neu</span></h2>
+        <p>Bilder und Kunstwerke per KI analysieren und beschreiben lassen – sicher und passwortgeschützt.</p>
+        <span class="card-cta">Öffnen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+        <span class="card-host">bild-ki.ki-kernel.de</span>
+      </a>
+
+      <!-- ============ Kunst-Expedition ============ -->
+      <a class="card" href="https://kunstexpedition.ki-kernel.de">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 13a8 8 0 0 1 16 0"/>
+            <path d="M4 13v3.2A1.8 1.8 0 0 0 5.8 18H7v-5H5.8A1.8 1.8 0 0 0 4 13z"/>
+            <path d="M20 13v3.2A1.8 1.8 0 0 1 18.2 18H17v-5h1.2A1.8 1.8 0 0 1 20 13z"/>
+          </svg>
+        </span>
+        <h2>Kunst-Expedition</h2>
+        <p>Audio-Impulse zum langsamen, bewussten Betrachten von Kunstwerken im Museum.</p>
+        <span class="card-cta">Öffnen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+        <span class="card-host">kunstexpedition.ki-kernel.de</span>
+      </a>
+
+      <!-- ============ Odysseus-Wiki ============ -->
+      <a class="card" href="https://odysseus-wiki.ki-kernel.de">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 14h16l-1.5 4.2A2 2 0 0 1 16.6 19.6H7.4A2 2 0 0 1 5.5 18.2z"/>
+            <path d="M12 14V5M12 5l5 2.5M12 5L7 7.5"/>
+            <path d="M12 19.6V22"/>
+          </svg>
+        </span>
+        <h2>Odysseus-Wiki</h2>
+        <p>Offline-Enzyklopädie mit allen 24 Gesängen Homers, Charakterprofilen und interaktiver Karte der Irrfahrten.</p>
+        <span class="card-cta">Öffnen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+        <span class="card-host">odysseus-wiki.ki-kernel.de</span>
+      </a>
+
+      <!-- ============ QR-Code Generator ============ -->
+      <a class="card" href="https://qr-code.ki-kernel.de">
+        <span class="card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/>
+            <rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/>
+            <rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/>
+            <path d="M14 14h3v3M20.5 14v6.5M14 20.5h3"/>
+          </svg>
+        </span>
+        <h2>QR-Code Generator</h2>
+        <p>Erstelle schnelle, anpassbare QR-Codes für Links, Texte und Kontaktdaten. Direkt im Browser generiert.</p>
+        <span class="card-cta">Öffnen
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+        <span class="card-host">qr-code.ki-kernel.de</span>
+      </a>
+
+    </div>
+  </main>
+</div>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-block">
+        <h3>Impressum &amp; Datenschutz</h3>
+        <p>Diese Webseite ist ein rein privates, nicht-kommerzielles Hobbyprojekt.</p>
+        <p>Es werden keine Tracking-Tools (wie Google Analytics) eingesetzt.</p>
+      </div>
+      <div class="foot-block">
+        <h3>Kontakt</h3>
+        <p>Verantwortlich: Uwe Thobae</p>
+        <p>E-Mail: <a href="mailto:ki-kernel@gmail.com">ki-kernel@gmail.com</a></p>
+      </div>
+    </div>
+    <p class="copyright">© 2026 ki-kernel.de</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Farbschema (Dark/Light) mit sicherer Speicherung ---------- */
+  var root = document.documentElement;
+  var toggle = document.getElementById('themeToggle');
+  var label = document.getElementById('themeLabel');
+
+  function safeGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function safeSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+
+  var stored = safeGet('ki-kernel-theme');
+  if(!stored){
+    stored = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+  }
+  applyTheme(stored);
+
+  function applyTheme(t){
+    root.setAttribute('data-theme', t);
+    if(label) label.textContent = (t === 'light') ? 'Dunkel' : 'Hell';
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute('content', t === 'light' ? '#f6f7fb' : '#0b0f1a');
+  }
+
+  toggle.addEventListener('click', function(){
+    var next = (root.getAttribute('data-theme') === 'light') ? 'dark' : 'light';
+    applyTheme(next);
+    safeSet('ki-kernel-theme', next);
+    // Partikelfarbe sofort aktualisieren
+    if(typeof refreshParticleColor === 'function') refreshParticleColor();
+  });
+
+  /* ---------- Partikel-Hintergrund (leichtgewichtig, offline) ---------- */
+  var canvas = document.getElementById('particles');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var refreshParticleColor = null;
+
+  if(canvas && canvas.getContext && !reduce){
+    var ctx = canvas.getContext('2d');
+    var W, H, DPR, dots = [], pColor = 'rgba(150,165,255,.55)', lColor = 'rgba(120,135,220,.16)';
+    var running = true;
+
+    refreshParticleColor = function(){
+      var cs = getComputedStyle(root);
+      pColor = cs.getPropertyValue('--particle').trim() || pColor;
+      lColor = cs.getPropertyValue('--link-line').trim() || lColor;
+    };
+
+    function resize(){
+      DPR = Math.min(window.devicePixelRatio || 1, 2);
+      W = canvas.clientWidth; H = canvas.clientHeight;
+      canvas.width = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      var target = Math.round(Math.min(80, Math.max(26, (W * H) / 22000)));
+      dots = [];
+      for(var i=0;i<target;i++){
+        dots.push({
+          x: Math.random()*W, y: Math.random()*H,
+          vx: (Math.random()-.5)*0.28, vy: (Math.random()-.5)*0.28,
+          r: Math.random()*1.6 + 0.7
+        });
+      }
+    }
+
+    function step(){
+      if(!running){ return; }
+      ctx.clearRect(0,0,W,H);
+      for(var i=0;i<dots.length;i++){
+        var d = dots[i];
+        d.x += d.vx; d.y += d.vy;
+        if(d.x < -20) d.x = W+20; else if(d.x > W+20) d.x = -20;
+        if(d.y < -20) d.y = H+20; else if(d.y > H+20) d.y = -20;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+        ctx.fillStyle = pColor;
+        ctx.fill();
+      }
+      // Verbindungslinien
+      for(var a=0;a<dots.length;a++){
+        for(var b=a+1;b<dots.length;b++){
+          var dx = dots[a].x - dots[b].x, dy = dots[a].y - dots[b].y;
+          var dist2 = dx*dx + dy*dy;
+          if(dist2 < 14400){ // 120px
+            ctx.beginPath();
+            ctx.moveTo(dots[a].x, dots[a].y);
+            ctx.lineTo(dots[b].x, dots[b].y);
+            ctx.strokeStyle = lColor;
+            ctx.globalAlpha = 1 - dist2/14400;
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    var rt;
+    window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(resize, 160); });
+    document.addEventListener('visibilitychange', function(){
+      running = !document.hidden;
+      if(running) requestAnimationFrame(step);
+    });
+
+    refreshParticleColor();
+    resize();
+    requestAnimationFrame(step);
+  }
+})();
+</script>
+</body>
+</html>
